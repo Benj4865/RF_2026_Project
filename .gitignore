@@ -35,27 +35,3 @@ htmlcov/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Images
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.bmp
-*.tif
-*.tiff
-*.webp
-*.svg
-
-# CAD files
-*.stl
-*.step
-*.stp
-*.iges
-*.igs
-*.dwg
-*.dxf
-*.sldprt
-*.sldasm
-*.f3d
-*.obj
