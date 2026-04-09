@@ -1,0 +1,12 @@
+{
+    "name": "pygame-runner",
+    "build": { "dockerfile": "../Dockerfile" },
+    "containerEnv": {
+        "DISPLAY": ":0"
+    },
+    "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,readonly"
+    ],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind",
+    "workspaceFolder": "/app"
+}
