@@ -13,13 +13,15 @@ from config import (
     COOP_JUMP_COLLISION_GRACE,
     COOP_AIRBORNE_DEADZONE_HEIGHT,
     COOP_SPAWN_INTERVAL_MIN, COOP_SPAWN_INTERVAL_MAX, COOP_SPEED_MULTIPLIER,
+    SINGLE_JUMP_DURATION, SINGLE_JUMP_HEIGHT, SINGLE_JUMP_COOLDOWN,
 )
 from utils import (
     calculate_score, get_current_spawn_interval,
     get_obstacle_rect, get_obstacle_hitbox, get_obstacle_progress, get_perspective_speed_multiplier,
     get_coop_obstacle_rect, get_ground_hitbox_from_rect,
     can_spawn_in_lane, spawn_obstacle,
-    get_player_rect, get_coop_player_rects, get_coop_beam_rect, get_player_ground_hitbox,
+    get_player_rect, get_singleplayer_jump_rect,
+    get_coop_player_rects, get_coop_beam_rect, get_player_ground_hitbox,
     reset_round, draw_controls_panel,
 )
 from poseEstimator import PoseEstimator
@@ -54,6 +56,10 @@ elapsed_time, spawn_timer, pose_timer, obstacles = reset_round()
 current_obstacle_speed = INITIAL_OBSTACLE_SPEED
 score = 0
 final_score = 0
+single_jump_timer = 0.0
+single_jump_cooldown_timer = 0.0
+single_jump_start_lane = 0
+single_jump_target_lane = 0
 coop_jump_timer = 0.0
 coop_jump_grace_timer = 0.0
 coop_next_spawn_interval = random.uniform(COOP_SPAWN_INTERVAL_MIN, COOP_SPAWN_INTERVAL_MAX)
@@ -80,6 +86,10 @@ while running:
                 elapsed_time, spawn_timer, pose_timer, obstacles = reset_round()
                 score = 0
                 PLAYER_LANE = 0
+                single_jump_timer = 0.0
+                single_jump_cooldown_timer = 0.0
+                single_jump_start_lane = 0
+                single_jump_target_lane = 0
                 coop_jump_timer = 0.0
                 coop_jump_grace_timer = 0.0
                 coop_next_spawn_interval = random.uniform(COOP_SPAWN_INTERVAL_MIN, COOP_SPAWN_INTERVAL_MAX)
@@ -88,7 +98,10 @@ while running:
                 game_state = "running"
 
             elif game_state == "running" and game_mode == "single" and event.key == pygame.K_SPACE:
-                PLAYER_LANE = 1 - PLAYER_LANE  # toggles between 0 and 1
+                if single_jump_timer <= 0.0 and single_jump_cooldown_timer <= 0.0:
+                    single_jump_start_lane = PLAYER_LANE
+                    single_jump_target_lane = 1 - PLAYER_LANE
+                    single_jump_timer = SINGLE_JUMP_DURATION
 
             elif game_state == "running" and game_mode == "coop" and event.key in (pygame.K_a, pygame.K_l):
                 if event.key == pygame.K_a:
@@ -108,6 +121,10 @@ while running:
                 score = 0
                 PLAYER_LANE = 0
                 current_obstacle_speed = INITIAL_OBSTACLE_SPEED
+                single_jump_timer = 0.0
+                single_jump_cooldown_timer = 0.0
+                single_jump_start_lane = 0
+                single_jump_target_lane = 0
                 coop_jump_timer = 0.0
                 coop_jump_grace_timer = 0.0
                 coop_next_spawn_interval = random.uniform(COOP_SPAWN_INTERVAL_MIN, COOP_SPAWN_INTERVAL_MAX)
@@ -117,6 +134,15 @@ while running:
         elapsed_time += delta_time
         spawn_timer += delta_time
         pose_timer += delta_time
+        if game_mode == "single":
+            if single_jump_timer > 0.0:
+                single_jump_timer = max(0.0, single_jump_timer - delta_time)
+                if single_jump_timer == 0.0:
+                    PLAYER_LANE = single_jump_target_lane
+                    single_jump_cooldown_timer = SINGLE_JUMP_COOLDOWN
+            elif single_jump_cooldown_timer > 0.0:
+                single_jump_cooldown_timer = max(0.0, single_jump_cooldown_timer - delta_time)
+
         base_speed = INITIAL_OBSTACLE_SPEED + (elapsed_time * OBSTACLE_SPEED_INCREASE)
         if game_mode == "coop":
             current_obstacle_speed = base_speed * COOP_SPEED_MULTIPLIER
@@ -172,9 +198,18 @@ while running:
             obstacle_rects = [get_obstacle_rect(obstacle) for obstacle in obstacles]
             obstacle_hitboxes = [get_obstacle_hitbox(obstacle) for obstacle in obstacles]
 
-            player_rect = get_player_rect(PLAYER_LANE)
+            if single_jump_timer > 0.0:
+                jump_progress = 1.0 - (single_jump_timer / SINGLE_JUMP_DURATION)
+                lane_progress = single_jump_start_lane + ((single_jump_target_lane - single_jump_start_lane) * jump_progress)
+                jump_height = int(SINGLE_JUMP_HEIGHT * (4 * jump_progress * (1 - jump_progress)))
+                player_rect = get_singleplayer_jump_rect(lane_progress, jump_height)
+            else:
+                player_rect = get_player_rect(PLAYER_LANE)
+
+            player_ground_hitbox = get_player_ground_hitbox(player_rect)
+
             for obstacle_hitbox in obstacle_hitboxes:
-                if obstacle_hitbox.colliderect(player_rect):
+                if obstacle_hitbox.colliderect(player_ground_hitbox):
                     final_score = score
                     game_state = "game_over"
                     break
@@ -221,6 +256,8 @@ while running:
 
     elif game_state == "start":
         current_obstacle_speed = INITIAL_OBSTACLE_SPEED
+        single_jump_timer = 0.0
+        single_jump_cooldown_timer = 0.0
         coop_jump_timer = 0.0
         coop_jump_grace_timer = 0.0
 
@@ -228,7 +265,12 @@ while running:
     left_player_rect = None
     right_player_rect = None
     beam_rect = None
-    if game_mode == "coop":
+    if game_mode == "single" and single_jump_timer > 0.0:
+        jump_progress = 1.0 - (single_jump_timer / SINGLE_JUMP_DURATION)
+        lane_progress = single_jump_start_lane + ((single_jump_target_lane - single_jump_start_lane) * jump_progress)
+        jump_height = int(SINGLE_JUMP_HEIGHT * (4 * jump_progress * (1 - jump_progress)))
+        player_rect = get_singleplayer_jump_rect(lane_progress, jump_height)
+    elif game_mode == "coop":
         jump_height = 0
         if game_state == "running" and coop_jump_timer > 0.0:
             jump_progress = 1.0 - (coop_jump_timer / COOP_JUMP_DURATION)
@@ -313,7 +355,7 @@ while running:
         if game_mode == "single":
             controls_lines = [
                 "Controls:",
-                "SPACE: Change lane",
+                "SPACE: Jump lanes",
                 "Close window: Quit",
             ]
         else:

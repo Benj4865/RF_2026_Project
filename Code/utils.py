@@ -177,6 +177,25 @@ def get_player_rect(player_lane):
     )
 
 
+def get_singleplayer_jump_rect(lane_progress, jump_offset=0):
+    player_y = PLAYER_Y - jump_offset
+    base_progress = (PLAYER_Y - HORIZON_Y) / (HEIGHT - HORIZON_Y)
+    base_progress = max(0.0, min(1.0, base_progress))
+
+    left_center_x = get_lane_center(0, base_progress)
+    right_center_x = get_lane_center(1, base_progress)
+    player_lane_center = lerp(left_center_x, right_center_x, lane_progress)
+    player_lane_width = get_lane_width(base_progress)
+    player_width = max(28, int(player_lane_width * 0.5))
+    player_height = max(36, int(player_lane_width * 0.85))
+    return pygame.Rect(
+        int(player_lane_center - player_width / 2),
+        int(player_y - player_height / 2),
+        player_width,
+        player_height,
+    )
+
+
 def reset_round():
     return 0.0, 0.0, 0.0, []
 
