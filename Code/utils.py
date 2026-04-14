@@ -67,6 +67,80 @@ def get_obstacle_hitbox(obstacle):
     )
 
 
+def get_coop_obstacle_rect(obstacle):
+    progress = (obstacle["y"] - HORIZON_Y) / (HEIGHT - HORIZON_Y)
+    progress = max(0.0, min(1.0, progress))
+    lane_width = get_lane_width(progress)
+    obstacle_width = max(16, int(lane_width * 0.35))
+    obstacle_height = max(18, int(lane_width * 0.65))
+    center_x = WIDTH // 2
+    return pygame.Rect(
+        int(center_x - obstacle_width / 2),
+        int(obstacle["y"] - obstacle_height / 2),
+        obstacle_width,
+        obstacle_height,
+    )
+
+
+def get_ground_hitbox_from_rect(rect):
+    hitbox_height = max(6, rect.height // 4)
+    return pygame.Rect(
+        rect.x,
+        rect.bottom - hitbox_height,
+        rect.width,
+        hitbox_height,
+    )
+
+
+def get_coop_player_rects(jump_offset=0):
+    player_y = PLAYER_Y - jump_offset
+    base_progress = (PLAYER_Y - HORIZON_Y) / (HEIGHT - HORIZON_Y)
+    base_progress = max(0.0, min(1.0, base_progress))
+
+    left_center_x = get_lane_center(0, base_progress)
+    right_center_x = get_lane_center(1, base_progress)
+    lane_width = get_lane_width(base_progress)
+    player_width = max(24, int(lane_width * 0.35))
+    player_height = max(34, int(lane_width * 0.75))
+
+    left_rect = pygame.Rect(
+        int(left_center_x - player_width / 2),
+        int(player_y - player_height / 2),
+        player_width,
+        player_height,
+    )
+    right_rect = pygame.Rect(
+        int(right_center_x - player_width / 2),
+        int(player_y - player_height / 2),
+        player_width,
+        player_height,
+    )
+    return left_rect, right_rect
+
+
+def get_player_ground_hitbox(rect):
+    hitbox_height = max(4, rect.height // 5)
+    return pygame.Rect(
+        rect.x,
+        rect.bottom - hitbox_height,
+        rect.width,
+        hitbox_height,
+    )
+
+
+def get_coop_beam_rect(left_rect, right_rect):
+    beam_height = max(6, min(left_rect.height, right_rect.height) // 6)
+    beam_top = (left_rect.centery + right_rect.centery) // 2 - beam_height // 2
+    beam_left = left_rect.right
+    beam_right = right_rect.left
+    return pygame.Rect(
+        beam_left,
+        beam_top,
+        max(1, beam_right - beam_left),
+        beam_height,
+    )
+
+
 def get_obstacle_progress(obstacle):
     progress = (obstacle["y"] - HORIZON_Y) / (HEIGHT - HORIZON_Y)
     return max(0.0, min(1.0, progress))
