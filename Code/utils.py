@@ -55,6 +55,18 @@ def get_obstacle_rect(obstacle):
     )
 
 
+def get_obstacle_hitbox(obstacle):
+    """Returns a thin rect at the bottom of the obstacle representing ground contact."""
+    full_rect = get_obstacle_rect(obstacle)
+    hitbox_height = max(6, full_rect.height // 4)
+    return pygame.Rect(
+        full_rect.x,
+        full_rect.bottom - hitbox_height,
+        full_rect.width,
+        hitbox_height,
+    )
+
+
 def get_obstacle_progress(obstacle):
     progress = (obstacle["y"] - HORIZON_Y) / (HEIGHT - HORIZON_Y)
     return max(0.0, min(1.0, progress))

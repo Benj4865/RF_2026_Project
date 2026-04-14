@@ -12,7 +12,7 @@ from config import (
 )
 from utils import (
     calculate_score, get_current_spawn_interval,
-    get_obstacle_rect, get_obstacle_progress, get_perspective_speed_multiplier,
+    get_obstacle_rect, get_obstacle_hitbox, get_obstacle_progress, get_perspective_speed_multiplier,
     can_spawn_in_lane, spawn_obstacle,
     get_player_rect, reset_round, draw_controls_panel,
 )
@@ -112,10 +112,11 @@ while running:
 
         obstacles = [obstacle for obstacle in obstacles if obstacle["y"] < HEIGHT + 80]
         obstacle_rects = [get_obstacle_rect(obstacle) for obstacle in obstacles]
+        obstacle_hitboxes = [get_obstacle_hitbox(obstacle) for obstacle in obstacles]
 
         player_rect = get_player_rect(PLAYER_LANE)
-        for obstacle_rect in obstacle_rects:
-            if obstacle_rect.colliderect(player_rect):
+        for obstacle_hitbox in obstacle_hitboxes:
+            if obstacle_hitbox.colliderect(player_rect):
                 final_score = score
                 game_state = "game_over"
                 break
