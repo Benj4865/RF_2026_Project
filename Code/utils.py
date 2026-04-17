@@ -231,7 +231,7 @@ def get_singleplayer_jump_rect(lane_progress, jump_offset=0):
 
 
 def reset_round():
-    return 0.0, 0.0, 0.0, []
+    return 0.0, 0.0, []
 
 
 def draw_controls_panel(surface, lines, font):
