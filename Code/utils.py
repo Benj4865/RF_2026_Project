@@ -13,6 +13,12 @@ from config import (
     TIME_SCORE_RATE, SPEED_SCORE_FACTOR,
 )
 
+def load_image(path):
+    image = pygame.image.load(path).convert_alpha()
+    return image
+
+def scale_image_to_rect(image, rect):
+    return pygame.transform.scale(image, (rect.width, rect.height))
 
 def calculate_score(elapsed_time, obstacle_speed):
     return int((elapsed_time * TIME_SCORE_RATE) + (elapsed_time * obstacle_speed * SPEED_SCORE_FACTOR))
@@ -128,6 +134,30 @@ def get_player_ground_hitbox(rect):
     )
 
 
+def get_coop_player_foot_hitbox(rect):
+    # Co-op uses a narrower and thinner foot contact to reduce unfair jump collisions.
+    hitbox_width = max(10, int(rect.width * 0.62))
+    hitbox_height = max(2, rect.height // 12)
+    return pygame.Rect(
+        int(rect.centerx - hitbox_width / 2),
+        rect.bottom - hitbox_height,
+        hitbox_width,
+        hitbox_height,
+    )
+
+
+def get_coop_obstacle_bottom_hitbox(obstacle):
+    full_rect = get_obstacle_rect(obstacle)
+    hitbox_width = max(10, int(full_rect.width * 0.72))
+    hitbox_height = max(2, full_rect.height // 12)
+    return pygame.Rect(
+        int(full_rect.centerx - hitbox_width / 2),
+        full_rect.bottom - hitbox_height,
+        hitbox_width,
+        hitbox_height,
+    )
+
+
 def get_coop_beam_rect(left_rect, right_rect):
     beam_height = max(6, min(left_rect.height, right_rect.height) // 6)
     beam_top = (left_rect.centery + right_rect.centery) // 2 - beam_height // 2
@@ -163,6 +193,10 @@ def spawn_obstacle(obstacles, lane):
 
 
 def get_player_rect(player_lane):
+    return get_lane_player_rect(player_lane)
+
+
+def get_lane_player_rect(player_lane, jump_offset=0):
     player_progress = (PLAYER_Y - HORIZON_Y) / (HEIGHT - HORIZON_Y)
     player_progress = max(0.0, min(1.0, player_progress))
     player_lane_center = get_lane_center(player_lane, player_progress)
@@ -171,7 +205,7 @@ def get_player_rect(player_lane):
     player_height = max(36, int(player_lane_width * 0.85))
     return pygame.Rect(
         int(player_lane_center - player_width / 2),
-        int(PLAYER_Y - player_height / 2),
+        int((PLAYER_Y - jump_offset) - player_height / 2),
         player_width,
         player_height,
     )
