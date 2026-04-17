@@ -6,8 +6,6 @@ from config import (
     WIDTH, HEIGHT, FPS,
     OBSTACLE_COLOR, OBSTACLE_SPEED_INCREASE, INITIAL_OBSTACLE_SPEED,
     MAX_ACTIVE_OBSTACLES, MAX_DELTA_TIME,
-    POSE_UPDATE_INTERVAL, ENABLE_POSE_INPUT,
-    POSE_INFERENCE_WIDTH, POSE_CONFIDENCE, POSE_IOU, POSE_MAX_DETECTIONS,
     LANES, HORIZON_Y, LANE_GAP_TOP, LANE_WIDTH_TOP, LANE_WIDTH_BOTTOM,
     COOP_JUMP_DURATION, COOP_JUMP_HEIGHT,
     COOP_COLLISION_ZONE_HEIGHT, PLAYER_Y,
@@ -23,18 +21,7 @@ from utils import (
     get_coop_player_foot_hitbox, get_coop_obstacle_bottom_hitbox,
     reset_round, draw_controls_panel, load_image,
 )
-from poseEstimator import PoseEstimator
 
-pose = (
-    PoseEstimator(
-        inference_width=POSE_INFERENCE_WIDTH,
-        confidence=POSE_CONFIDENCE,
-        iou=POSE_IOU,
-        max_detections=POSE_MAX_DETECTIONS,
-    )
-    if ENABLE_POSE_INPUT
-    else None
-)
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -51,7 +38,7 @@ circle_y = HEIGHT // 2
 running = True
 game_state = "start"
 game_mode = "single"
-elapsed_time, spawn_timer, pose_timer, obstacles = reset_round()
+elapsed_time, spawn_timer, obstacles = reset_round()
 current_obstacle_speed = INITIAL_OBSTACLE_SPEED
 score = 0
 final_score = 0
@@ -85,7 +72,7 @@ while running:
                 game_mode = "coop"
 
             elif game_state == "start" and event.key in (pygame.K_SPACE, pygame.K_RETURN):
-                elapsed_time, spawn_timer, pose_timer, obstacles = reset_round()
+                elapsed_time, spawn_timer, obstacles = reset_round()
                 score = 0
                 PLAYER_LANE = 0
                 single_jump_timer = 0.0
@@ -112,7 +99,7 @@ while running:
                     right_coop_jump_timer = COOP_JUMP_DURATION
 
             elif game_state == "game_over" and event.key in (pygame.K_r, pygame.K_RETURN):
-                elapsed_time, spawn_timer, pose_timer, obstacles = reset_round()
+                elapsed_time, spawn_timer, obstacles = reset_round()
                 score = 0
                 PLAYER_LANE = 0
                 current_obstacle_speed = INITIAL_OBSTACLE_SPEED
@@ -128,7 +115,6 @@ while running:
     if game_state == "running":
         elapsed_time += delta_time
         spawn_timer += delta_time
-        pose_timer += delta_time
         if game_mode == "single":
             if single_jump_timer > 0.0:
                 single_jump_timer = max(0.0, single_jump_timer - delta_time)
@@ -145,15 +131,6 @@ while running:
         else:
             current_obstacle_speed = base_speed
             current_spawn_interval = get_current_spawn_interval(current_obstacle_speed)
-
-        if ENABLE_POSE_INPUT and pose_timer >= POSE_UPDATE_INTERVAL:
-            frame, keypoints, _ = pose.get_frame_and_keypoints()
-            pose_timer -= POSE_UPDATE_INTERVAL
-
-            if frame is not None and keypoints is not None and len(keypoints) > 0:
-                nose_x = int(keypoints[0][0])
-                frame_width = frame.shape[1]
-                circle_x = WIDTH - int(nose_x / frame_width * WIDTH)
 
         while spawn_timer >= current_spawn_interval:
             available_slots = MAX_ACTIVE_OBSTACLES - len(obstacles)
@@ -371,7 +348,5 @@ while running:
     draw_controls_panel(screen, controls_lines, controls_font)
 
     pygame.display.flip()
-
-if pose is not None:
-    pose.release()
+    
 pygame.quit()
