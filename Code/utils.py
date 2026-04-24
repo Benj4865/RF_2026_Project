@@ -20,6 +20,10 @@ def load_image(path):
 def scale_image_to_rect(image, rect):
     return pygame.transform.scale(image, (rect.width, rect.height))
 
+def get_sprite_frame(sheet, frame_x, frame_y, frame_width, frame_height):
+    rect = pygame.Rect(frame_x * frame_width, frame_y * frame_height, frame_width, frame_height)
+    return sheet.subsurface(rect)
+
 def calculate_score(elapsed_time, obstacle_speed):
     return int((elapsed_time * TIME_SCORE_RATE) + (elapsed_time * obstacle_speed * SPEED_SCORE_FACTOR))
 
@@ -188,13 +192,15 @@ def can_spawn_in_lane(obstacles, lane):
     return True
 
 
-def spawn_obstacle(obstacles, lane):
-    obstacles.append({"lane": lane, "y": float(HORIZON_Y + 10)})
+def spawn_obstacle(obstacles, lane, image):
+    obstacles.append({"lane": lane, "y": float(HORIZON_Y + 10), "image": image})
 
 
 def get_player_rect(player_lane):
     return get_lane_player_rect(player_lane)
 
+def get_tile(sheet, x, y, size=16):
+    return sheet.subsurface(pygame.Rect((x - 1) * size, (y - 1) * size, size, size))
 
 def get_lane_player_rect(player_lane, jump_offset=0):
     player_progress = (PLAYER_Y - HORIZON_Y) / (HEIGHT - HORIZON_Y)

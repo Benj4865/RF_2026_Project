@@ -1,5 +1,6 @@
+from cmath import rect
 import random
-
+import os 
 import pygame
 
 from config import (
@@ -19,7 +20,7 @@ from utils import (
     get_player_rect, get_singleplayer_jump_rect,
     get_lane_player_rect, get_player_ground_hitbox,
     get_coop_player_foot_hitbox, get_coop_obstacle_bottom_hitbox,
-    reset_round, draw_controls_panel, load_image,
+    reset_round, draw_controls_panel, get_tile, get_sprite_frame, lerp
 )
 
 
@@ -50,10 +51,29 @@ left_coop_jump_timer = 0.0
 right_coop_jump_timer = 0.0
 coop_next_spawn_interval = random.uniform(COOP_SPAWN_INTERVAL_MIN, COOP_SPAWN_INTERVAL_MAX)
 
-#ASSETS = {
-#    "player": load_image("assets/player.png"),
-#    "obstacle_1": load_image("assets/obstacle.png"),
-#}
+sheet = pygame.image.load("assets/frog.png").convert_alpha()
+player_sprite = get_sprite_frame(sheet, 0, 3, 80, 80)
+
+obstacle_images = [
+    pygame.image.load(f"assets/obstacles/{f}").convert_alpha()
+    for f in os.listdir("assets/obstacles")
+    if f.endswith(".png")
+]
+
+tileset = pygame.image.load("assets/tileset.png").convert()
+
+road_tile = get_tile(tileset, 2, 2)
+side_tile_left = get_tile(tileset, 1, 2)
+side_tile_right = get_tile(tileset, 2, 3)
+plain_grass_tile = get_tile(tileset, 6, 1)
+
+grass_accent_tiles = [
+    get_tile(tileset, 4, 1),
+    get_tile(tileset, 4, 2),
+    get_tile(tileset, 5, 2),
+    get_tile(tileset, 4, 3),
+    get_tile(tileset, 5, 3),
+]
 
 while running:
     delta_time = clock.tick(FPS) / 1000.0
@@ -143,14 +163,14 @@ while running:
                         if spawned:
                             break
                         if can_spawn_in_lane(obstacles, lane):
-                            spawn_obstacle(obstacles, lane)
+                            spawn_obstacle(obstacles, lane, random.choice(obstacle_images))
                             spawned = True
                 else:
                             lanes = list(range(len(LANES)))
                             random.shuffle(lanes)
                             for lane in lanes:
                                 if can_spawn_in_lane(obstacles, lane):
-                                    spawn_obstacle(obstacles, lane)
+                                    spawn_obstacle(obstacles, lane, random.choice(obstacle_images))
                                     break
 
             spawn_timer -= current_spawn_interval
@@ -258,6 +278,12 @@ while running:
 
     screen.fill((0, 0, 0))
 
+
+    for y in range(HORIZON_Y, HEIGHT):
+        t = (y - HORIZON_Y) / (HEIGHT - HORIZON_Y)
+
+        left_road  = lerp(WIDTH//2 - LANE_GAP_TOP - LANE_WIDTH_TOP, LANES[0] - LANE_WIDTH_BOTTOM//2, t)
+        right_road = lerp(WIDTH//2 + LANE_GAP_TOP + LANE_WIDTH_TOP, LANES[1] + LANE_WIDTH_BOTTOM//2, t)
     # left lane
     pygame.draw.polygon(screen, (50, 50, 50), [
         (WIDTH // 2 - LANE_GAP_TOP - LANE_WIDTH_TOP, HORIZON_Y),
@@ -280,14 +306,22 @@ while running:
         else:
             obstacle_rects = [get_obstacle_rect(obstacle) for obstacle in obstacles]
 
-    for obstacle_rect in obstacle_rects:
-        pygame.draw.rect(screen, OBSTACLE_COLOR, obstacle_rect, border_radius=6)
-
+    for obstacle in obstacles:
+        obstacle_rect = get_obstacle_rect(obstacle)
+        size = obstacle_rect.height
+        scaled = pygame.transform.scale(obstacle["image"], (size, size))
+        screen.blit(scaled, (obstacle_rect.centerx - size // 2, obstacle_rect.top))
+    # player character
     if game_mode == "single":
-        pygame.draw.rect(screen, (255, 255, 255), player_rect, border_radius=8)
+        size = player_rect.height
+        scaled = pygame.transform.scale(player_sprite, (size, size))
+        blit_x = player_rect.centerx - size // 2
+        screen.blit(scaled, (blit_x, player_rect.top))
     else:
-        pygame.draw.rect(screen, (255, 255, 255), left_player_rect, border_radius=8)
-        pygame.draw.rect(screen, (255, 255, 255), right_player_rect, border_radius=8)
+        for rect in (left_player_rect, right_player_rect):
+            size = rect.height
+            scaled = pygame.transform.scale(player_sprite, (size, size))
+            screen.blit(scaled, (rect.centerx - size // 2, rect.top))
 
     if game_state == "running":
         screen.blit(timer_text, (20, 20))
