@@ -14,7 +14,7 @@ from config import (
     SINGLE_JUMP_DURATION, SINGLE_JUMP_HEIGHT, SINGLE_JUMP_COOLDOWN, 
 )
 from utils import (
-    calculate_score, get_current_spawn_interval,
+    calculate_score, generate_score_qr, get_current_spawn_interval,
     get_obstacle_rect, get_obstacle_hitbox, get_perspective_speed_multiplier,
     can_spawn_in_lane, spawn_obstacle,
     get_player_rect, get_singleplayer_jump_rect,
@@ -586,6 +586,7 @@ while running:
                 if obstacle_hitbox.colliderect(player_ground_hitbox):
                     final_score = score
                     game_state = "game_over"
+                    qr_surface = generate_score_qr(final_score)
                     break
         else:
             if left_coop_jump_timer > 0.0:
@@ -626,6 +627,7 @@ while running:
                 if collided_left or collided_right:
                     final_score = score
                     game_state = "game_over"
+                    qr_surface = generate_score_qr(final_score)
                     break
 
         base_score = calculate_score(elapsed_time, current_obstacle_speed)
@@ -737,6 +739,8 @@ while running:
         screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2 - 110))
         screen.blit(final_score_text, (WIDTH // 2 - final_score_text.get_width() // 2, HEIGHT // 2 - 35))
         screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 20))
+        qr_rect = qr_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 200))
+        screen.blit(qr_surface, qr_rect)
 
     if game_state == "start":
         controls_lines = [

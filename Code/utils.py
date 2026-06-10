@@ -1,6 +1,13 @@
-import random
-
+import os
+from dotenv import load_dotenv
+from io import BytesIO
 import pygame
+import hmac
+import hashlib
+import qrcode
+
+load_dotenv()
+secret = os.getenv("HMAC_SECRET")
 
 from config import (
     WIDTH, HEIGHT,
@@ -12,6 +19,25 @@ from config import (
     MIN_LANE_VERTICAL_GAP,
     TIME_SCORE_RATE, SPEED_SCORE_FACTOR,
 )
+
+def sign_score(score):
+    hmac_obj = hmac.new(secret.encode(), digestmod=hashlib.sha256)
+    hmac_obj.update(str(score).encode())
+    return hmac_obj.hexdigest()
+
+def generate_score_qr(score):
+    signature = sign_score(score)
+    url=f"http://game-leaderboard-ivory.vercel.app/leaderboard?score={score}&sig={signature}"
+
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=4, border=4)
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    buffer=BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+    return pygame.image.load(buffer).convert_alpha()
 
 def load_image(path):
     image = pygame.image.load(path).convert_alpha()
@@ -255,3 +281,7 @@ def draw_controls_panel(surface, lines, font):
     for index, line in enumerate(lines):
         text = font.render(line, True, (230, 230, 230))
         surface.blit(text, (panel_x + padding, panel_y + padding + index * line_height))
+
+
+if __name__ == "__main__":
+    print(sign_score(42))
