@@ -27,7 +27,7 @@ def sign_score(score):
 
 def generate_score_qr(score):
     signature = sign_score(score)
-    url=f"http://game-leaderboard-ivory.vercel.app/leaderboard?score={score}&sig={signature}"
+    url=f"https://rf26-leaderboard-server.vercel.app/submit?score={score}&sig={signature}"
 
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=4, border=4)
     qr.add_data(url)
@@ -37,6 +37,8 @@ def generate_score_qr(score):
     buffer=BytesIO()
     img.save(buffer, format="PNG")
     buffer.seek(0)
+    print(f"Generated QR code for score {score} with signature {signature}")
+    print(f"URL encoded in QR: {url}")
     return pygame.image.load(buffer).convert_alpha()
 
 def load_image(path):
