@@ -6,6 +6,7 @@ import hmac
 import hashlib
 import qrcode
 
+
 load_dotenv()
 secret = os.getenv("HMAC_SECRET")
 
@@ -20,14 +21,14 @@ from config import (
     TIME_SCORE_RATE, SPEED_SCORE_FACTOR,
 )
 
-def sign_score(score):
+def sign_score(score, nonce):
     hmac_obj = hmac.new(secret.encode(), digestmod=hashlib.sha256)
-    hmac_obj.update(str(score).encode())
+    hmac_obj.update(f"{score}:{nonce}".encode())
     return hmac_obj.hexdigest()
 
-def generate_score_qr(score):
-    signature = sign_score(score)
-    url=f"https://rf26-leaderboard-server.vercel.app/submit?score={score}&sig={signature}"
+def generate_score_qr(score, nonce):
+    signature = sign_score(score, nonce)
+    url=f"https://rf26-leaderboard-server.vercel.app/submit?score={score}&sig={signature}&nonce={nonce}"
 
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=4, border=4)
     qr.add_data(url)

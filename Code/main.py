@@ -1,6 +1,7 @@
 import random
 import os 
 import math
+import uuid
 import pygame
 
 from config import (
@@ -586,7 +587,8 @@ while running:
                 if obstacle_hitbox.colliderect(player_ground_hitbox):
                     final_score = score
                     game_state = "game_over"
-                    qr_surface = generate_score_qr(final_score)
+                    nonce = str(uuid.uuid4())
+                    qr_surface = generate_score_qr(final_score, nonce)
                     break
         else:
             if left_coop_jump_timer > 0.0:
@@ -627,7 +629,8 @@ while running:
                 if collided_left or collided_right:
                     final_score = score
                     game_state = "game_over"
-                    qr_surface = generate_score_qr(final_score)
+                    nonce = str(uuid.uuid4())
+                    qr_surface = generate_score_qr(final_score, nonce)
                     break
 
         base_score = calculate_score(elapsed_time, current_obstacle_speed)
