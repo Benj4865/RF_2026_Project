@@ -21,7 +21,7 @@ from utils import (
     get_player_rect, get_singleplayer_jump_rect,
     get_lane_player_rect, get_player_ground_hitbox,
     get_coop_player_foot_hitbox, get_coop_obstacle_bottom_hitbox,
-    reset_round, draw_controls_panel, get_sprite_frame, lerp
+    reset_round, draw_controls_panel, get_sprite_frame, lerp, render_fitted_text
 )
 
 
@@ -124,6 +124,8 @@ COOP_MULTI_SPAWN_CHANCE_MAX = 0.82
 COOP_MULTI_SPAWN_SPEED_RANGE = 280.0
 COOP_SPAWN_JITTER_MIN = 0.72
 COOP_SPAWN_JITTER_MAX = 1.35
+
+TEXT_SIDE_MARGIN = max(18, int(WIDTH * 0.05))
 
 
 def build_industrial_skyline():
@@ -391,6 +393,12 @@ def draw_environment_objects(surface, env_objects):
             pygame.draw.rect(surface, (62, 60, 64), body_rect)
             top_rect = pygame.Rect(body_rect.x - 1, body_rect.y - 3, body_rect.width + 2, 3)
             pygame.draw.rect(surface, (92, 84, 76), top_rect)
+
+
+def blit_centered_fitted_text(surface, font, text, color, center_y, max_width):
+    text_surface = render_fitted_text(font, text, color, max_width)
+    text_x = max(TEXT_SIDE_MARGIN, (WIDTH - text_surface.get_width()) // 2)
+    surface.blit(text_surface, (text_x, center_y - text_surface.get_height() // 2))
 
 while running:
     delta_time = clock.tick(FPS) / 1000.0
@@ -674,9 +682,10 @@ while running:
         left_player_rect = get_lane_player_rect(0, left_jump_height)
         right_player_rect = get_lane_player_rect(1, right_jump_height)
 
-    timer_text = hud_font.render(f"Time: {elapsed_time:05.2f}s", True, (255, 255, 255))
-    score_text = hud_font.render(f"Score: {score}", True, (255, 255, 255))
-    speed_text = hud_font.render(f"Obstacle Speed: {current_obstacle_speed:.0f}", True, (255, 255, 255))
+    hud_max_width = WIDTH - (TEXT_SIDE_MARGIN * 2)
+    timer_text = render_fitted_text(hud_font, f"Time: {elapsed_time:05.2f}s", (255, 255, 255), hud_max_width)
+    score_text = render_fitted_text(hud_font, f"Score: {score}", (255, 255, 255), hud_max_width)
+    speed_text = render_fitted_text(hud_font, f"Obstacle Speed: {current_obstacle_speed:.0f}", (255, 255, 255), hud_max_width)
 
     screen.fill((0, 0, 0))
     draw_industrial_background(screen, elapsed_time)
@@ -716,32 +725,27 @@ while running:
             screen.blit(scaled, (rect.centerx - size // 2, rect.top))
 
     if game_state == "running":
-        screen.blit(timer_text, (20, 20))
-        screen.blit(score_text, (20, 55))
-        screen.blit(speed_text, (20, 90))
+        hud_x = TEXT_SIDE_MARGIN
+        hud_y = 20
+        for text_surface in (timer_text, score_text, speed_text):
+            screen.blit(text_surface, (hud_x, hud_y))
+            hud_y += text_surface.get_height() + 8
 
     if game_state == "start":
-        mode_text = message_font.render(
-            f"Mode: {'Single Player' if game_mode == 'single' else 'Co-op'} (press 1 or 2)",
-            True,
-            (220, 220, 220),
-        )
-        title_text = title_font.render("Road Fighter", True, (255, 255, 255))
-        prompt_text = message_font.render("Press SPACE or ENTER to start", True, (220, 220, 220))
-        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 2 - 90))
-        screen.blit(prompt_text, (WIDTH // 2 - prompt_text.get_width() // 2, HEIGHT // 2 - 25))
-        screen.blit(mode_text, (WIDTH // 2 - mode_text.get_width() // 2, HEIGHT // 2 + 30))
+        mode_text = f"Mode: {'Single Player' if game_mode == 'single' else 'Co-op'} (press 1 or 2)"
+        overlay_max_width = WIDTH - (TEXT_SIDE_MARGIN * 2)
+        blit_centered_fitted_text(screen, title_font, "The Last Checkpoint", (255, 255, 255), HEIGHT // 2 - 90, overlay_max_width)
+        blit_centered_fitted_text(screen, message_font, "Press SPACE or ENTER to start", (220, 220, 220), HEIGHT // 2 - 25, overlay_max_width)
+        blit_centered_fitted_text(screen, message_font, mode_text, (220, 220, 220), HEIGHT // 2 + 30, overlay_max_width)
 
     elif game_state == "game_over":
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 140))
         screen.blit(overlay, (0, 0))
-        game_over_text = title_font.render("Game Over", True, (255, 110, 110))
-        final_score_text = message_font.render(f"Final Score: {final_score}", True, (255, 255, 255))
-        restart_text = message_font.render("Press R or ENTER to return", True, (220, 220, 220))
-        screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2 - 110))
-        screen.blit(final_score_text, (WIDTH // 2 - final_score_text.get_width() // 2, HEIGHT // 2 - 35))
-        screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 20))
+        overlay_max_width = WIDTH - (TEXT_SIDE_MARGIN * 2)
+        blit_centered_fitted_text(screen, title_font, "Game Over", (255, 110, 110), HEIGHT // 2 - 110, overlay_max_width)
+        blit_centered_fitted_text(screen, message_font, f"Final Score: {final_score}", (255, 255, 255), HEIGHT // 2 - 35, overlay_max_width)
+        blit_centered_fitted_text(screen, message_font, "Press R or ENTER to return", (220, 220, 220), HEIGHT // 2 + 20, overlay_max_width)
         qr_rect = qr_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 200))
         screen.blit(qr_surface, qr_rect)
 

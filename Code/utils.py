@@ -269,21 +269,39 @@ def reset_round():
     return 0.0, 0.0, []
 
 
+def render_fitted_text(font, text, color, max_width):
+    text_surface = font.render(text, True, color)
+    if text_surface.get_width() <= max_width or max_width <= 0:
+        return text_surface
+
+    scale = max_width / text_surface.get_width()
+    scaled_width = max(1, int(text_surface.get_width() * scale))
+    scaled_height = max(1, int(text_surface.get_height() * scale))
+    return pygame.transform.smoothscale(text_surface, (scaled_width, scaled_height))
+
+
 def draw_controls_panel(surface, lines, font):
-    padding = 10
-    line_height = 22
-    panel_width = max(210, max(font.size(line)[0] for line in lines) + padding * 2)
-    panel_height = padding * 2 + line_height * len(lines)
-    panel_x = WIDTH - panel_width - 16
+    outer_margin = max(10, int(WIDTH * 0.035))
+    padding = max(8, int(WIDTH * 0.02))
+    line_gap = max(6, int(HEIGHT * 0.008))
+    max_panel_width = max(140, int(WIDTH * 0.44))
+    max_text_width = max_panel_width - (padding * 2)
+    text_surfaces = [render_fitted_text(font, line, (230, 230, 230), max_text_width) for line in lines]
+
+    panel_width = max(text.get_width() for text in text_surfaces) + padding * 2
+    content_height = sum(text.get_height() for text in text_surfaces)
+    panel_height = padding * 2 + content_height + line_gap * max(0, len(text_surfaces) - 1)
+    panel_x = WIDTH - panel_width - outer_margin
     panel_y = 16
 
     panel = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
     panel.fill((0, 0, 0, 135))
     surface.blit(panel, (panel_x, panel_y))
 
-    for index, line in enumerate(lines):
-        text = font.render(line, True, (230, 230, 230))
-        surface.blit(text, (panel_x + padding, panel_y + padding + index * line_height))
+    line_y = panel_y + padding
+    for text in text_surfaces:
+        surface.blit(text, (panel_x + padding, line_y))
+        line_y += text.get_height() + line_gap
 
 
 if __name__ == "__main__":
