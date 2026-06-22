@@ -451,7 +451,7 @@ while running:
                 if right_coop_jump_timer <= 0.0:
                     right_coop_jump_timer = COOP_JUMP_DURATION
 
-            elif game_state == "game_over" and event.key in (pygame.K_r, pygame.K_RETURN):
+            elif game_state == "game_over" and event.key in (pygame.K_r,):
                 elapsed_time, spawn_timer, obstacles = reset_round()
                 score = 0
                 PLAYER_LANE = 0
