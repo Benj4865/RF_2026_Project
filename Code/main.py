@@ -28,10 +28,10 @@ pygame.init()
 pygame.mouse.set_visible(False)
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
-hud_font = pygame.font.SysFont(None, 32)
-title_font = pygame.font.SysFont(None, 72)
-message_font = pygame.font.SysFont(None, 42)
-controls_font = pygame.font.SysFont(None, 24)
+hud_font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 32)
+title_font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 72)
+message_font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 42)
+controls_font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 24)
 scroll_offset = 0.0
 
 PLAYER_LANE = 0
@@ -683,9 +683,7 @@ while running:
         right_player_rect = get_lane_player_rect(1, right_jump_height)
 
     hud_max_width = WIDTH - (TEXT_SIDE_MARGIN * 2)
-    timer_text = render_fitted_text(hud_font, f"Time: {elapsed_time:05.2f}s", (255, 255, 255), hud_max_width)
     score_text = render_fitted_text(hud_font, f"Score: {score}", (255, 255, 255), hud_max_width)
-    speed_text = render_fitted_text(hud_font, f"Obstacle Speed: {current_obstacle_speed:.0f}", (255, 255, 255), hud_max_width)
 
     screen.fill((0, 0, 0))
     draw_industrial_background(screen, elapsed_time)
@@ -725,17 +723,17 @@ while running:
             screen.blit(scaled, (rect.centerx - size // 2, rect.top))
 
     if game_state == "running":
-        hud_x = TEXT_SIDE_MARGIN
-        hud_y = 20
-        for text_surface in (timer_text, score_text, speed_text):
-            screen.blit(text_surface, (hud_x, hud_y))
-            hud_y += text_surface.get_height() + 8
+        for text_surface in (score_text,):
+            x = (WIDTH - text_surface.get_width()) // 2
+            y = 20
+            screen.blit(text_surface, (x, y))
+
 
     if game_state == "start":
-        mode_text = f"Mode: {'Single Player' if game_mode == 'single' else 'Co-op'} (press 1 or 2)"
+        mode_text = f"Mode: {'Single Player' if game_mode == 'single' else 'Co-op'}"
         overlay_max_width = WIDTH - (TEXT_SIDE_MARGIN * 2)
         blit_centered_fitted_text(screen, title_font, "The Last Checkpoint", (255, 255, 255), HEIGHT // 2 - 90, overlay_max_width)
-        blit_centered_fitted_text(screen, message_font, "Press SPACE or ENTER to start", (220, 220, 220), HEIGHT // 2 - 25, overlay_max_width)
+        blit_centered_fitted_text(screen, message_font, "Press a BIG Button to start", (220, 220, 220), HEIGHT // 2 - 25, overlay_max_width)
         blit_centered_fitted_text(screen, message_font, mode_text, (220, 220, 220), HEIGHT // 2 + 30, overlay_max_width)
 
     elif game_state == "game_over":
@@ -745,39 +743,9 @@ while running:
         overlay_max_width = WIDTH - (TEXT_SIDE_MARGIN * 2)
         blit_centered_fitted_text(screen, title_font, "Game Over", (255, 110, 110), HEIGHT // 2 - 110, overlay_max_width)
         blit_centered_fitted_text(screen, message_font, f"Final Score: {final_score}", (255, 255, 255), HEIGHT // 2 - 35, overlay_max_width)
-        blit_centered_fitted_text(screen, message_font, "Press R or ENTER to return", (220, 220, 220), HEIGHT // 2 + 20, overlay_max_width)
+        blit_centered_fitted_text(screen, message_font, "Press Reset to Return", (220, 220, 220), HEIGHT // 2 + 20, overlay_max_width)
         qr_rect = qr_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 200))
         screen.blit(qr_surface, qr_rect)
-
-    if game_state == "start":
-        controls_lines = [
-            "Controls:",
-            "1: Single Player",
-            "2: Co-op",
-            "SPACE / ENTER: Start",
-        ]
-    elif game_state == "running":
-        if game_mode == "single":
-            controls_lines = [
-                "Controls:",
-                "SPACE: Jump lanes",
-                "Close window: Quit",
-            ]
-        else:
-            controls_lines = [
-                "Controls:",
-                "A: Left lane jump",
-                "L: Right lane jump",
-                "Close window: Quit",
-            ]
-    else:
-        controls_lines = [
-            "Controls:",
-            "R / ENTER: Back to start",
-            "Close window: Quit",
-        ]
-
-    draw_controls_panel(screen, controls_lines, controls_font)
 
     pygame.display.flip()
     
