@@ -24,7 +24,6 @@ from utils import (
     reset_round, draw_controls_panel, get_sprite_frame, lerp, render_fitted_text
 )
 
-
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
