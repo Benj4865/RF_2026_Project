@@ -25,7 +25,8 @@ from utils import (
 )
 
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.mouse.set_visible(False)
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 hud_font = pygame.font.SysFont(None, 32)
 title_font = pygame.font.SysFont(None, 72)
