@@ -593,7 +593,7 @@ while running:
 
             for obstacle_hitbox in obstacle_hitboxes:
                 if obstacle_hitbox.colliderect(player_ground_hitbox):
-                    final_score = score
+                    final_score = math.floor(score)
                     game_state = "game_over"
                     nonce = str(uuid.uuid4())
                     qr_surface = generate_score_qr(final_score, nonce)
@@ -635,7 +635,7 @@ while running:
                 collided_left = obstacle["lane"] == 0 and swept_hitbox.colliderect(left_player_ground_hitbox)
                 collided_right = obstacle["lane"] == 1 and swept_hitbox.colliderect(right_player_ground_hitbox)
                 if collided_left or collided_right:
-                    final_score = score
+                    final_score = math.floor(score)
                     game_state = "game_over"
                     nonce = str(uuid.uuid4())
                     qr_surface = generate_score_qr(final_score, nonce)
