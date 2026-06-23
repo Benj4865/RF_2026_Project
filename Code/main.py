@@ -744,7 +744,8 @@ while running:
         blit_centered_fitted_text(screen, title_font, "Game Over", (255, 110, 110), HEIGHT // 2 - 110, overlay_max_width)
         blit_centered_fitted_text(screen, message_font, f"Final Score: {final_score}", (255, 255, 255), HEIGHT // 2 - 35, overlay_max_width)
         blit_centered_fitted_text(screen, message_font, "Press Reset to Return", (220, 220, 220), HEIGHT // 2 + 20, overlay_max_width)
-        qr_rect = qr_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 200))
+        blit_centered_fitted_text(screen, message_font, "Scan the QR Code to Share Score", (220, 220, 220), HEIGHT // 2 + 75, overlay_max_width)
+        qr_rect = qr_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 250))
         screen.blit(qr_surface, qr_rect)
 
     pygame.display.flip()
