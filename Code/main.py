@@ -683,7 +683,7 @@ while running:
         right_player_rect = get_lane_player_rect(1, right_jump_height)
 
     hud_max_width = WIDTH - (TEXT_SIDE_MARGIN * 2)
-    score_text = render_fitted_text(hud_font, f"Score: {score}", (255, 255, 255), hud_max_width)
+    score_text = render_fitted_text(hud_font, f"Score: {math.floor(score)}", (255, 255, 255), hud_max_width)
 
     screen.fill((0, 0, 0))
     draw_industrial_background(screen, elapsed_time)
